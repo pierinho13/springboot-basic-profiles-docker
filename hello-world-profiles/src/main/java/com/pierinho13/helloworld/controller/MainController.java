@@ -9,12 +9,10 @@ import com.pierinho13.helloworld.config.CustomPropertyConfig;
 @RestController
 public class MainController {
 	
-	@Autowired
-
+    @Autowired
     private CustomPropertyConfig customPropertyConfig;
 
     @GetMapping("/")
-
     public String getMain() {
         return "Hello world the key is : " + customPropertyConfig.getKey();
 
