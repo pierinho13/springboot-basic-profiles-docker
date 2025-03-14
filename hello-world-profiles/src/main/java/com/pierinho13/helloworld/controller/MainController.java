@@ -1,21 +1,57 @@
 package com.pierinho13.helloworld.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.PropertySource;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pierinho13.helloworld.config.CustomPropertyConfig;
 
-@RestController
+@Controller
 public class MainController {
 	
     @Autowired
     private CustomPropertyConfig customPropertyConfig;
+    
+    @Autowired
+    private Environment environment;
 
     @GetMapping("/")
-    public String getMain() {
-        return "Hello world the key is : " + customPropertyConfig.getKey();
+    public String getMain(Model model) {
+    	
+    	Map<String, String> envVariables = System.getenv();
+        
+        model.addAttribute("envVariables",envVariables);
+        
+        Map<String, String> propertiesMap = new HashMap<>();
 
+
+        for (PropertySource<?> propertySource : ((org.springframework.core.env.AbstractEnvironment) environment).getPropertySources()) {
+
+            if (propertySource instanceof org.springframework.core.env.MapPropertySource) {
+
+                Map<String, Object> source = ((org.springframework.core.env.MapPropertySource) propertySource).getSource();
+
+                for (Map.Entry<String, Object> entry : source.entrySet()) {
+
+                    propertiesMap.put(entry.getKey(), entry.getValue().toString());
+
+                }
+
+            }
+
+        }
+
+        model.addAttribute("propertiesMap", propertiesMap);
+        
+        return "greeting";
+        
     }
 
 }

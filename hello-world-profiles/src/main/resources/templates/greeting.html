@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head> 
+    <title>Hello world profiles</title> 
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f5;
+            color: #333;
+        }
+        h1 {
+            color: #007acc;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #007acc;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello, World!</h1>
+	
+	<p>GLOBAL VARIABLES</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Env</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="entry : ${envVariables}">
+                <td th:text="${entry.key}">Key</td>
+                <td th:text="${entry.value}">Value</td>
+            </tr>
+        </tbody>
+    </table>
+	<p>PROPERTIES</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Property Key</th>
+                <th>Property Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="entry : ${propertiesMap}">
+                <td th:text="${entry.key}">Key</td>
+                <td th:text="${entry.value}">Value</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
