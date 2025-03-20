@@ -50,6 +50,8 @@ public class MainController {
 
         model.addAttribute("propertiesMap", propertiesMap);
         
+        model.addAttribute("customProperty", customPropertyConfig.getKey());
+        
         return "greeting";
         
     }
