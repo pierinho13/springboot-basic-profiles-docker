@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -12,6 +13,9 @@ public class TraceDemoService {
 
     private final RestTemplate restTemplate;
 
+    @Value("${api.base-url:http://localhost:8081}")
+    private String apiBaseUrl;
+
     public TraceDemoService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
@@ -19,29 +23,23 @@ public class TraceDemoService {
     public Map<String, Object> runTrace(int loops, Duration sleep, boolean fail) {
         long start = System.currentTimeMillis();
 
-        // CPU work
-        String payload = cpuWork(loops);
+        // Llamar al microservicio externo (apm-examples-api)
+        String traceUrl = apiBaseUrl + "/api/trace?loops=" + loops + "&sleepMs=" + sleep.toMillis() + "&fail=" + fail;
 
-        // I/O simulada
-        sleep(sleep);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> apiResponse = restTemplate.getForObject(traceUrl, Map.class);
 
-        // HTTP client span (RestTemplate suele ser auto-instrumentado por APM)
-        String echo = restTemplate.getForObject("http://localhost:8080/api/echo?value=" + loops, String.class);
-
-        if (fail) {
-            // Para ver errores en APM
-            throw new IllegalStateException("Forced error to validate APM errors tab");
-        }
+        // También llamar a echo en el otro servicio
+        String echoUrl = apiBaseUrl + "/api/echo?value=" + loops;
+        String echo = restTemplate.getForObject(echoUrl, String.class);
 
         long ms = System.currentTimeMillis() - start;
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("ok", true);
-        out.put("loops", loops);
-        out.put("sleepMs", sleep.toMillis());
+        out.put("apiResponse", apiResponse);
         out.put("echo", echo);
-        out.put("payloadHash", payload.hashCode());
-        out.put("tookMs", ms);
+        out.put("totalTookMs", ms);
         return out;
     }
 
@@ -52,7 +50,7 @@ public class TraceDemoService {
         for (int i = 0; i < requests; i++) {
             final int n = i;
             futures.add(pool.submit(() -> restTemplate.getForObject(
-                    "http://localhost:8080/api/trace?loops=2&sleepMs=25&fail=" + (n % 15 == 0),
+                    apiBaseUrl + "/api/trace?loops=2&sleepMs=25&fail=" + (n % 15 == 0),
                     String.class
             )));
         }
@@ -75,22 +73,5 @@ public class TraceDemoService {
         out.put("ok", ok);
         out.put("failed", failed);
         return out;
-    }
-
-    private String cpuWork(int loops) {
-        // Algo simple que consume CPU y genera stacktrace interesante
-        long acc = 0;
-        for (int i = 0; i < loops * 50_000; i++) {
-            acc += (i * 31L) ^ (acc >>> 1);
-        }
-        return "acc=" + acc;
-    }
-
-    private void sleep(Duration d) {
-        try {
-            Thread.sleep(Math.max(0, d.toMillis()));
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
     }
 }
